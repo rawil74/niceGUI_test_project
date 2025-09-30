@@ -5,12 +5,12 @@ from database import Student
 @ui.page("/")
 def index():
 
-    lbl = ui.label(text="Привет, Урсэи!").style('font-size: 30px;')
+    lbl = ui.label(text="Привет, Урсэи!")
     stt =Student.get()
     lbl.text = stt.fam
 
-    ui.link('Студенты',target='students').style('font-size: 30px;')
-    ui.link('Студент',target='student').style('font-size: 30px;')
+    ui.link('Студенты',target='students')
+    ui.link('Студент',target='student')
 
 
 @ui.page(path="/students")
@@ -25,7 +25,7 @@ def students():
                 Student.age, 
                 Student.sex, 
                 Student.studgroup)
-                .limit(100)
+                .limit(5)
                 )
 
     #определяем столбцы таблицы
@@ -64,16 +64,13 @@ def students():
                     nameinp=ui.input(label='Имя',
                             value=stdTable.selected[0]['studname'],
                             validation={'Слишком длинное имя': lambda value: len(value) < 10}).style('width:100%')
-                    ageinp=ui.input(label='Возраст',
-                            value=stdTable.selected[0]['age'],
-                            validation={'возраст должен быть целым положительным числом': lambda value: value.isnumeric() and int(value) > 0}).style('width:100%')
+               
                     with ui.row().style("width:100%").classes('justify-center'):
                             ui.button('Отмена', icon='close', on_click=dialog1.close)
                             ui.button('Сохранить', icon='done',
                                       on_click=lambda :(
                                                         updateRow(fam=faminp.value,
-                                                                   name=nameinp.value,
-                                                                   age=ageinp.value),
+                                                                   name=nameinp.value),
                                                         dialog1.close(),
                                                         stdTable.selected.clear(),
                                                         ))
@@ -109,14 +106,13 @@ def students():
                 #Диалог открывается при вызове функции delDialog
                 dialog2.open()
 
-        def updateRow(fam, name, age):
+        def updateRow(fam,name):
              '''Обновление записи в базе'''
 
              st = Student.get(stdTable.selected[0]['id'])
 
              st.fam = fam
              st.studname = name
-             st.age = age
              st.save()
              
              #обновление строки в таблице
@@ -125,7 +121,6 @@ def students():
              #и обновляем поля в источнике
              flt['fam'] = fam
              flt['studname'] = name
-             flt['age'] = age
 
              stdTable.update() #обновляем таблицу
 
@@ -161,9 +156,7 @@ def students():
 @ui.page("/student")
 def student():
     st: Student = Student.get()
-    ui.label(text=f'{st.fam} {st.studname} \n Возраст: {st.age} \n Группа: {st.studgroup.name}' )\
-    .style('''white-space: pre-line;
-            font-size: 30px''')
+    ui.label(text= f'{st.fam}  {st.studname}  Группа: {st.studgroup.name}' )
 
 
 print("Starting server...")
