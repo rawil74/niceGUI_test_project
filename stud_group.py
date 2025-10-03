@@ -1,5 +1,5 @@
 from nicegui import app, ui
-from database import Student, Group
+from database import Student, Group, Department
 
 def StudentsByGroup(grp_id):
     '''Возвращает список студентов по выбранной группе.\n
@@ -16,11 +16,30 @@ def StudentsByGroup(grp_id):
        )
     #строим список словарей с данными студентов
     studData = [x for x in std.dicts()]
+
     return studData
+
+def GroupByFacult(fct_id):
+    '''Возвращает список студентов по выбранной группе.\n
+    Вызывается при изменении группы в выпадающем списке,\n
+    а также при запуске приложения'''
+
+    grp = (Group
+       .select(Group.id,
+               Group.name)
+       .where(Group.department == fct_id)
+       )
+    #строим список словарей с данными студентов
+        #строим словарь с группами
+    gd = {}
+    for g in grp:
+        gd[g.id] = g.name
+
+    return gd
 
 #центрируем контент
 nc = ui.query('.nicegui-content')
-st = '''background:lightblue;
+st = '''background:radial-gradient(circle, white, grey, black);
         width:100%;
         height:100vh;
         align-items:center;
@@ -28,11 +47,16 @@ st = '''background:lightblue;
 
 nc.style(st)
 
+fct = Department.select(Department.id, Department.name)
 #Получаем список групп
 grp = Group.select(Group.id, Group.name)
 
 #Поскольку данные для выпадающего списка - словарь
 #приходится его строить
+fd={}
+for f in fct:
+    fd[f.id]=f.name
+
 gd={}
 for g in grp:
     gd[g.id]=g.name
@@ -40,7 +64,16 @@ for g in grp:
 #выводим выпадающий список с группами
 #группа по умолчанию с индексом 5. M.б. любая
 with ui.card().style("margin:auto"):
-    ui.select(gd, 
+    with ui.row().style("margin:auto"):
+        ui.select(fd, 
+            value=list(fd.keys())[2],
+            on_change = lambda e:(
+                new_ftdata := GroupByFacult(e.value),
+                sel.update(),
+                sel.set_options(new_ftdata),
+                sel.set_value(list(new_ftdata.keys())[0])
+                ))
+        sel = ui.select(gd, 
             value=list(gd.keys())[5], 
             on_change = lambda e:(
                 new_stdata := StudentsByGroup(e.value),
@@ -49,6 +82,7 @@ with ui.card().style("margin:auto"):
                 stdTable.rows.extend(new_stdata),
                 stdTable.update()
                 ))
+    
 
     #Выводим таблицу со студентами
     #содержание таблицы зависит от выбранной группы
@@ -56,7 +90,7 @@ with ui.card().style("margin:auto"):
                     row_key="id",
                     title="Студенты",
                     pagination=3,
-                    selection='single')  
+                    selection='multiple')  
 
 
 ui.run()
